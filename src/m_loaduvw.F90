@@ -26,16 +26,6 @@ subroutine loaduvw(u,v,w,lreaduvw,nrens,it,istep)
    write(cit,'(i2.2)')it
    write(cistep,'(i6.6)')istep
 
-! load uvw from reference run
-   iens=0
-   write(ciens,'(i4.4)')iens
-   fname=trim(experiment)//'/mem'//ciens//'/uvw'//cistep//'.uf'
-   inquire(file=trim(fname),exist=ex)
-   if (ex) then
-      call read_uvw(fname,u,v,w)
-   else
-      print '(a)','Could not load u,v, and w for reference case'
-   endif
 
 ! load uvw from ensemble run
    do iens=1,nrens

@@ -26,7 +26,7 @@ subroutine correlation(Cxy,A,Y,meanA,stddevA,meanY,stddevY,ndim,nrobs,nrens)
 
    do m=1,nrobs
    do i=1,ndim
-      Cxy(i,m)=Cxy(i,m)/stddevA(i)*stddevY(m)+tiny(x)
+      Cxy(i,m)=Cxy(i,m)/(stddevA(i)*stddevY(m)+tiny(x))
    enddo
    enddo
 

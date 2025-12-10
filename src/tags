@@ -45,6 +45,7 @@ m_runensemble	m_runensemble.F90	/^module
 m_runmodel	m_runmodel.F90	/^module
 m_standarddev	m_standarddev.F90	/^module
 m_string	m_string.F90	/^module
+m_tecens	m_tecens.F90	/^module
 m_tecout	m_tecout.F90	/^module
 m_tecplot	m_tecplot.F90	/^module
 normal	m_normal.F90	/^module
@@ -58,5 +59,6 @@ runensemble	m_runensemble.F90	/^module
 runmodel	m_runmodel.F90	/^module
 standarddev	m_standarddev.F90	/^module
 string	m_string.F90	/^module
+tecens	m_tecens.F90	/^module
 tecout	m_tecout.F90	/^module
 tecplot	m_tecplot.F90	/^module

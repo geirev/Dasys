@@ -3,6 +3,7 @@ contains
 subroutine diag(filetype,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
    use mod_dimensions
    use m_tecout
+   use m_localdefs, only : experiment
    implicit none
    integer, intent(in)   :: filetype
    integer, intent(in)   :: it
@@ -25,7 +26,7 @@ subroutine diag(filetype,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,
    if (filetype==0) then
       write(cistep,'(a1,i6.6,a1,i3.3)')'F',istep,'_',it
       variables='i,j,k,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd'
-      num_of_vars=12
+      num_of_vars=11
 
    elseif (filetype==1) then
       cistep='_GRID'
@@ -39,7 +40,7 @@ subroutine diag(filetype,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,
       num_of_vars=8
    endif
 
-   call tecout(filetype,'tecda'//trim(cistep)//'.plt',it,trim(variables),num_of_vars,blanking,&
+   call tecout(filetype,trim(experiment)//'/tecda'//trim(cistep)//'.plt',it,trim(variables),num_of_vars,blanking,&
                             uave,vave,wave,velave,ustd,vstd,wstd,velstd)
 
 end subroutine

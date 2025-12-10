@@ -29,6 +29,7 @@ F90SOURCE = \
 	m_runmodel.F90\
 	m_standarddev.F90\
 	m_string.F90\
+	m_tecens.F90\
 	m_tecout.F90\
 	m_tecplot.F90
 

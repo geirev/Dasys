@@ -21,7 +21,7 @@ subroutine average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
    real(kind=4) :: vel(nx,ny,nz,nrens)
 
    integer i,j,k,n
-
+   print *,'mean and standard deviations'
 ! Mean
    uave=0.0
    vave=0.0
@@ -47,7 +47,7 @@ subroutine average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
    wave=wave/real(nrens,kind=4)
    velave=velave/real(nrens,kind=4)
 
-! stdiance
+! standard deviation
    ustd=0.0
    vstd=0.0
    wstd=0.0
@@ -75,6 +75,7 @@ subroutine average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
    vstd=sqrt(vstd)
    wstd=sqrt(wstd)
    velstd=sqrt(velstd)
+   print *,'done'
 
 end subroutine
 end module

@@ -23,6 +23,7 @@ main.o:      m_ref_uvw.o
 main.o:      m_resetensemble.o
 main.o:      m_runensemble.o
 main.o:      m_runmodel.o
+main.o:      m_tecens.o
 m_ansi_colors.o:      makefile
 m_assimilation.o:      makefile
 m_assimilation.o:      m_average.o
@@ -43,6 +44,7 @@ m_cline.o:      m_ansi_colors.o
 m_correlation.o:      makefile
 m_count_parameters.o:      makefile
 m_diag.o:      makefile
+m_diag.o:      m_localdefs.o
 m_diag.o:      mod_dimensions.o
 m_diag.o:      m_tecout.o
 m_get_observed_measurements.o:      makefile
@@ -72,7 +74,9 @@ m_read_parameters.o:      m_params.o
 m_read_uvw.o:      makefile
 m_read_uvw.o:      mod_dimensions.o
 m_ref_uvw.o:      makefile
+m_ref_uvw.o:      m_localdefs.o
 m_ref_uvw.o:      mod_dimensions.o
+m_ref_uvw.o:      m_read_uvw.o
 m_resetensemble.o:      makefile
 m_resetensemble.o:      m_localdefs.o
 m_resetensemble.o:      m_params.o
@@ -88,6 +92,8 @@ m_runmodel.o:      m_params.o
 m_runmodel.o:      m_read_uvw.o
 m_standarddev.o:      makefile
 m_string.o:      makefile
+m_tecens.o:      makefile
+m_tecens.o:      m_localdefs.o
 m_tecout.o:      makefile
 m_tecout.o:      mod_dimensions.o
 m_tecout.o:      m_tecplot.o

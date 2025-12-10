@@ -26,6 +26,7 @@ program main
    use m_resetensemble
    use m_runensemble
    use m_runmodel
+   use m_tecens
 
    implicit none
 
@@ -55,12 +56,18 @@ program main
    integer :: istep=1000
    integer :: it=1
 
-   integer :: mode=11
+   integer :: nmda=4
+   integer :: mode=13
    integer :: iunit
    logical :: ex
    integer nrensold
    character(len=6) cistep
    character(len=100) directory
+
+   real, allocatable :: ref(:)
+   character(len=200) :: cmd
+   character(len=100) :: tmpfile
+   real               :: relobserr=0.05
 
    type(uncertain_parameters), allocatable :: params(:)
 
@@ -93,6 +100,15 @@ program main
 
    ndim= count_parameters(parameter_file)
 
+         if (.not. allocated(velave)) allocate(velave(nx,ny,nz))
+         if (.not. allocated(velstd)) allocate(velstd(nx,ny,nz))
+         if (.not. allocated(uave)) allocate(uave(nx,ny,nz))
+         if (.not. allocated(vave)) allocate(vave(nx,ny,nz))
+         if (.not. allocated(wave)) allocate(wave(nx,ny,nz))
+         if (.not. allocated(ustd)) allocate(ustd(nx,ny,nz))
+         if (.not. allocated(vstd)) allocate(vstd(nx,ny,nz))
+         if (.not. allocated(wstd)) allocate(wstd(nx,ny,nz))
+
    ! Menu constructs
    comm=' '
    do
@@ -113,6 +129,7 @@ program main
       if (.not. allocated(w)) allocate(w(nx,ny,nz,0:nrens))
       nrensold=nrens
 
+
 ! Reading the experiment name
       call read_dasys_file(experiment_name_file,experiment)
 
@@ -123,6 +140,7 @@ program main
          print *,'nr, ndim',nr,ndim
          if (allocated(params)) deallocate(params)
          if (allocated(A))      deallocate(A)
+         if (allocated(ref))    deallocate(ref)
          call system('rm -f iniens.uf')
       endif
 
@@ -131,6 +149,7 @@ program main
          call  read_parameters(parameter_file,params,ndim)
 
          if (.not.allocated(A)) allocate(A(ndim,nrens))
+         if (.not.allocated(ref)) allocate(ref(ndim))
 
 !         inquire(file='iniens.uf',exist=ex)
 !         if (ex) then
@@ -178,16 +197,16 @@ program main
       call cline(trim(experiment),'        e: Experiment name')
       call cline(ndim,            '        f: Define uncertain parameters')
       call cline(nrobs,           '        g: Define observations')
-      print '(a)',                '    ##########################################################################################'
-      print '(a)',                '    # Model runs                                                                    #        #'
-      call cline(lreference,      '        1: Run single realization using default infile.in')
-      call cline(liniens,         '        2: Compute initial ensemble')
-      call cline(lensrun,         '        3: Run ensemble of realizations')
-      call cline(lyobs,           '        4: Fetch ensemble of predicted measurements')
-      call cline(lmeas,           '        5: Fetch observations from reference')
-      print '(a)',                '    #   6: Compute ES update                                                        #        #'
-      print '(a)',                '    #   7: Run posterior ES ensemble                                                #        #'
-      print '(a)',                '    #   8: Compute and dump diagnostics                                             #        #'
+!!        print '(a)',                '    ##########################################################################################'
+!!        print '(a)',                '    # Model runs                                                                    #        #'
+!!        call cline(lreference,      '        1: Run single realization using default infile.in')
+!!        call cline(liniens,         '        2: Compute initial ensemble')
+!!        call cline(lensrun,         '        3: Run ensemble of realizations')
+!!        call cline(lyobs,           '        4: Fetch ensemble of predicted measurements')
+!!        call cline(lmeas,           '        5: Fetch observations from reference')
+!!        print '(a)',                '    #   6: Compute ES update                                                        #        #'
+!!        print '(a)',                '    #   7: Run posterior ES ensemble                                                #        #'
+!!        print '(a)',                '    #   8: Compute and dump diagnostics                                             #        #'
 
 
       print '(a)',                '    ##########################################################################################'
@@ -264,192 +283,206 @@ program main
          endif
 
 
-      case('1')
-         call runmodel(u,v,w,istep,lreference)
-
-      case('2')
-         if (ndim > 0) then
-            call iniens(A,nrens,params,ndim)
-            liniens=.true.
-            lyobs=.false.
-         else
-            print *,'First define uncertain parameters (f).'
-         endif
-
-
-      case('3')
-         if (liniens) then
-            call runensemble(nrens,params,ndim,1,A)
-            lyobs=.false.
-            lensrun=.false.
-         else
-            print *,'ensemble is not initialized, run iniens(2) first.'
-         endif
-
-      case('4')
-         call get_predicted_measurements(lyobs,nrobs, nrens, 1, 1000)
-         if (allocated(Y))    deallocate(Y)   ; allocate(Y(nrobs,nrens))
-         if (allocated(S))    deallocate(S)   ; allocate(S(nrobs,nrens))
-         if (allocated(mean)) deallocate(mean); allocate(mean(nrobs))
-         mean=0.0
-         do j=1,nrens
-         do m=1,nrobs
-            Y(m,j)= yensemble(m,j)
-            mean(m)=mean(m)+Y(m,j)
-         enddo
-         enddo
-
-         mean=mean/real(nrens)
-         do j=1,nrens
-         do m=1,nrobs
-            S(m,j)= Y(m,j)-mean(m)
-         enddo
-         enddo
-
-      case('5')
-         call get_observed_measurements(nrobs,1000,lmeas)
-         if (allocated(E)) deallocate(E); allocate(E(nrobs,nrens))
-         if (allocated(D)) deallocate(D); allocate(D(nrobs,nrens))
-         if (allocated(O))    deallocate(O)   ; allocate(O(nrobs,nrens))
-         do j=1,nrens
-         do m=1,nrobs
-            E(m,j)=normal()*0.01*abs(obs(m)%d)
-            D(m,j)=obs(m)%d + E(m,j)
-            O(m,j)=D(m,j)-Y(m,j)
-         enddo
-         enddo
-
-      case('6') ! ES update
-         if (.not. liniens) print '(a)','First generate or initialize initial ensemble'; call sleep(1)
-         if (.not. lyobs)   print '(a)','First load observations'                      ; call sleep(1)
-         if (.not. lmeas)   print '(a)','First load predicted measurements'            ; call sleep(1)
-         if (liniens .and. lyobs .and. lmeas) then
-            print '(a)','Calling assimilation'
-
-            mode=13
-            print '(a,10f10.4)','Pri A: ',A(:,1:5)
-            call assimilation(ndim,nrens,nrobs,A,O,E,Y,S,mode)
-            print '(a,10f10.4)','Pos A: ',A(:,1:5)
-         endif
-
-      case('7') ! Run posterior ensemble
-            call runensemble(nrens,params,ndim,2,A)
-
-      case('8') ! Dump diagnostics
-         write(*,'(a)',advance='no')'Choose iteration (1-prior, 2/N-posterior): '
-         read(*,*)it
-
-         call loaduvw(u,v,w,luvwloaded,nrens,it,istep)
-
-            if (luvwloaded) then
-               if (.not. allocated(velave)) allocate(velave(nx,ny,nz))
-               if (.not. allocated(velstd)) allocate(velstd(nx,ny,nz))
-               if (.not. allocated(uave)) allocate(uave(nx,ny,nz))
-               if (.not. allocated(vave)) allocate(vave(nx,ny,nz))
-               if (.not. allocated(wave)) allocate(wave(nx,ny,nz))
-               if (.not. allocated(ustd)) allocate(ustd(nx,ny,nz))
-               if (.not. allocated(vstd)) allocate(vstd(nx,ny,nz))
-               if (.not. allocated(wstd)) allocate(wstd(nx,ny,nz))
-
-               call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
-
-! Printing grid
-               if (.not. allocated(blanking)) allocate(blanking(nx,ny,nz))
-               blanking=0
-               call diag(1,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
-
-! Printing ensemble averages and standard deviations
-               call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
-
-! Printing reference solution
-               call ref_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
-               call diag(2,istep,0,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
-
-         endif
+!!        case('1')
+!!           call runmodel(u,v,w,istep,lreference)
+!!  
+!!        case('2')
+!!           if (ndim > 0) then
+!!              call iniens(A,nrens,params,ndim)
+!!              liniens=.true.
+!!              lyobs=.false.
+!!           else
+!!              print *,'First define uncertain parameters (f).'
+!!           endif
+!!  
+!!  
+!!        case('3')
+!!           if (liniens) then
+!!              call runensemble(nrens,params,ndim,1,A)
+!!              lyobs=.false.
+!!              lensrun=.false.
+!!           else
+!!              print *,'ensemble is not initialized, run iniens(2) first.'
+!!           endif
+!!  
+!!        case('4')
+!!           call get_predicted_measurements(lyobs,nrobs, nrens, 1, 1000)
+!!           if (allocated(Y))    deallocate(Y)   ; allocate(Y(nrobs,nrens))
+!!           if (allocated(S))    deallocate(S)   ; allocate(S(nrobs,nrens))
+!!           if (allocated(mean)) deallocate(mean); allocate(mean(nrobs))
+!!           mean=0.0
+!!           do j=1,nrens
+!!           do m=1,nrobs
+!!              Y(m,j)= yensemble(m,j)
+!!              mean(m)=mean(m)+Y(m,j)
+!!           enddo
+!!           enddo
+!!  
+!!           mean=mean/real(nrens)
+!!           do j=1,nrens
+!!           do m=1,nrobs
+!!              S(m,j)= Y(m,j)-mean(m)
+!!           enddo
+!!           enddo
+!!  
+!!        case('5')
+!!           call get_observed_measurements(nrobs,1000,lmeas)
+!!           if (allocated(E)) deallocate(E); allocate(E(nrobs,nrens))
+!!           if (allocated(D)) deallocate(D); allocate(D(nrobs,nrens))
+!!           if (allocated(O))    deallocate(O)   ; allocate(O(nrobs,nrens))
+!!           do j=1,nrens
+!!           do m=1,nrobs
+!!              E(m,j)=normal()*0.01*abs(obs(m)%d)
+!!              D(m,j)=obs(m)%d + E(m,j)
+!!              O(m,j)=D(m,j)-Y(m,j)
+!!           enddo
+!!           enddo
+!!  
+!!        case('6') ! ES update
+!!           if (.not. liniens) print '(a)','First generate or initialize initial ensemble'; call sleep(1)
+!!           if (.not. lyobs)   print '(a)','First load observations'                      ; call sleep(1)
+!!           if (.not. lmeas)   print '(a)','First load predicted measurements'            ; call sleep(1)
+!!           if (liniens .and. lyobs .and. lmeas) then
+!!              print '(a)','Calling assimilation'
+!!  
+!!              print '(a,10f10.4)','Pri A: ',A(:,1:5)
+!!              call assimilation(ndim,nrens,nrobs,A,O,E,Y,S,mode)
+!!              print '(a,10f10.4)','Pos A: ',A(:,1:5)
+!!           endif
+!!  
+!!        case('7') ! Run posterior ensemble
+!!              call runensemble(nrens,params,ndim,2,A)
+!!  
+!!        case('8') ! Dump diagnostics
+!!           write(*,'(a)',advance='no')'Choose iteration (1-prior, 2/N-posterior): '
+!!           read(*,*)it
+!!  
+!!           call loaduvw(u,v,w,luvwloaded,nrens,it,istep)
+!!  
+!!              if (luvwloaded) then
+!!                 if (.not. allocated(velave)) allocate(velave(nx,ny,nz))
+!!                 if (.not. allocated(velstd)) allocate(velstd(nx,ny,nz))
+!!                 if (.not. allocated(uave)) allocate(uave(nx,ny,nz))
+!!                 if (.not. allocated(vave)) allocate(vave(nx,ny,nz))
+!!                 if (.not. allocated(wave)) allocate(wave(nx,ny,nz))
+!!                 if (.not. allocated(ustd)) allocate(ustd(nx,ny,nz))
+!!                 if (.not. allocated(vstd)) allocate(vstd(nx,ny,nz))
+!!                 if (.not. allocated(wstd)) allocate(wstd(nx,ny,nz))
+!!  
+!!                 call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
+!!  
+!!  ! Printing grid
+!!                 if (.not. allocated(blanking)) allocate(blanking(nx,ny,nz))
+!!                 blanking=0
+!!                 call diag(1,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
+!!  
+!!  ! Printing ensemble averages and standard deviations
+!!                 call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
+!!  
+!!  ! Printing reference solution
+!!                 call ref_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens,istep)
+!!                 call diag(2,istep,0,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
+!!  
+!!           endif
       case('10') ! Run full experiment from scratch
+         write(*,'(a)',advance='no')'Choose number of MDA steps: '
+         read(*,*)nmda
+
+         write(*,'(a)',advance='no')'Choose relative observation error (0.05) : '
+         read(*,*)relobserr
+
          print '(a)','Running reference simulation starting from infile.ref.'
          call runmodel(u,v,w,istep,lreference)
 
-         print '(a)','Initializing the ensemble of uncertain parameters.'
-         call iniens(A,nrens,params,ndim)
+         print '(a)','Saving diagnostics for reference run'
+! Printing grid
+         if (.not. allocated(blanking)) allocate(blanking(nx,ny,nz))
+         blanking=0
+         call diag(1,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
 
-         print '(a)','Running prior ensemble.'
-         call runensemble(nrens,params,ndim,1,A)
-
-
-         print '(a)','Assembling predicted measurements.'
-         call get_predicted_measurements(lyobs,nrobs, nrens, 1, 1000)
-         if (allocated(Y))    deallocate(Y)   ; allocate(Y(nrobs,nrens))
-         if (allocated(S))    deallocate(S)   ; allocate(S(nrobs,nrens))
-         if (allocated(mean)) deallocate(mean); allocate(mean(nrobs))
-         mean=0.0
-         do j=1,nrens
-         do m=1,nrobs
-            Y(m,j)= yensemble(m,j)
-            mean(m)=mean(m)+Y(m,j)
-         enddo
-         enddo
-
-         mean=mean/real(nrens)
-         do j=1,nrens
-         do m=1,nrobs
-            S(m,j)= Y(m,j)-mean(m)
-         enddo
-         enddo
-
+! Printing reference
+         call ref_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens,istep)
+         call diag(2,istep,0,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
 
          print '(a)','Getting observed measurements.'
          call get_observed_measurements(nrobs,1000,lmeas)
-         if (allocated(E)) deallocate(E); allocate(E(nrobs,nrens))
-         if (allocated(D)) deallocate(D); allocate(D(nrobs,nrens))
-         if (allocated(O))    deallocate(O)   ; allocate(O(nrobs,nrens))
-         do j=1,nrens
-         do m=1,nrobs
-            E(m,j)=normal()*0.01*abs(obs(m)%d)
-            D(m,j)=obs(m)%d + E(m,j)
-            O(m,j)=D(m,j)-Y(m,j)
-         enddo
-         enddo
 
-         print '(a)','ES assimilation step.'
-         mode=13
-         call assimilation(ndim,nrens,nrobs,A,O,E,Y,S,mode)
+         print '(a)','Initializing the ensemble of uncertain parameters.'
+         call iniens(A,nrens,params,ndim)
+         liniens=.true.
 
-         print '(a)','Run posterior ensemble'
-         call runensemble(nrens,params,ndim,2,A)
+         it=1
+         print '(a)','Running prior ensemble.'
+         call runensemble(nrens,params,ndim,it,A)
 
-         print *,'Diagnoistics:'
-         do it=1,2
+         print *,'Diagnoistics it=',it
+         print *,'loaduvw'
+         call loaduvw(u,v,w,luvwloaded,nrens,it,istep)
+         print *,'average'
+         call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
+         print *,'diag'
+         call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
+         tmpfile = 'tmp_uini.txt'
+         cmd = "grep uini infile.ref | awk '{print $1, $2}' > " // trim(tmpfile)
+         call system(cmd)
+         open(unit=10, file=trim(tmpfile), status='old', action='read')
+         read(10, *) ref(1:ndim)
+         close(10)
+         !  cmd = "rm -f " // trim(tmpfile)
+         !  call system(cmd)
 
+
+         call tecens(ref,ndim,1,nmda,0)
+         call tecens(A,ndim,nrens,nmda,it)
+
+
+         do it=2,nmda+1
+
+            print '(a)','Assembling predicted measurements.'
+            call get_predicted_measurements(lyobs,nrobs, nrens, it-1, 1000)
+            if (allocated(Y))    deallocate(Y)   ; allocate(Y(nrobs,nrens))
+            if (allocated(S))    deallocate(S)   ; allocate(S(nrobs,nrens))
+            if (allocated(mean)) deallocate(mean); allocate(mean(nrobs))
+            mean=0.0
+            do j=1,nrens
+            do m=1,nrobs
+               Y(m,j)= yensemble(m,j)
+               mean(m)=mean(m)+Y(m,j)
+            enddo
+            enddo
+
+            mean=mean/real(nrens)
+            do j=1,nrens
+            do m=1,nrobs
+               S(m,j)= Y(m,j)-mean(m)
+            enddo
+            enddo
+
+
+            if (allocated(E)) deallocate(E); allocate(E(nrobs,nrens))
+            if (allocated(D)) deallocate(D); allocate(D(nrobs,nrens))
+            if (allocated(O))    deallocate(O)   ; allocate(O(nrobs,nrens))
+            do j=1,nrens
+            do m=1,nrobs
+               E(m,j)=normal()*relobserr*abs(obs(m)%d)*sqrt(real(nmda))
+               D(m,j)=obs(m)%d + E(m,j)
+               O(m,j)=D(m,j)-Y(m,j)
+            enddo
+            enddo
+
+            print '(a)','ES assimilation step.'
+            call assimilation(ndim,nrens,nrobs,A,O,E,Y,S,mode)
+
+            print '(a)','Run posterior ensemble'
+            call runensemble(nrens,params,ndim,it,A)
+
+            print *,'Diagnoistics it=',it
             call loaduvw(u,v,w,luvwloaded,nrens,it,istep)
+            call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
+            call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
+            call tecens(A,ndim,nrens,nmda,it)
 
-            if (luvwloaded) then
-               if (.not. allocated(velave)) allocate(velave(nx,ny,nz))
-               if (.not. allocated(velstd)) allocate(velstd(nx,ny,nz))
-               if (.not. allocated(uave)) allocate(uave(nx,ny,nz))
-               if (.not. allocated(vave)) allocate(vave(nx,ny,nz))
-               if (.not. allocated(wave)) allocate(wave(nx,ny,nz))
-               if (.not. allocated(ustd)) allocate(ustd(nx,ny,nz))
-               if (.not. allocated(vstd)) allocate(vstd(nx,ny,nz))
-               if (.not. allocated(wstd)) allocate(wstd(nx,ny,nz))
-
-               call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
-
-! Printing grid
-               if (.not. allocated(blanking)) allocate(blanking(nx,ny,nz))
-               blanking=0
-               call diag(1,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
-
-! Printing ensemble averages and standard deviations
-               call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
-
-! Printing reference solution
-               call ref_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
-               call diag(2,istep,0,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
-
-            endif
          enddo
-
       end select
 
 
