@@ -9,6 +9,10 @@
  3                ! ibgk          : BGK order, ibgk=2 standard second order, ibgk=3 gives third order BGK
  1                ! ihrr          : Collision operator ihrr=1 includes regularization by 3rd ord Hermite
  1 0.15           ! ivreman smagor: Vreman subgridscale mixing (1) with Smagorinsky constant (0.15)
+ # Atmospheric boundary layer
+ 0                ! iablvisc      : mode for ABL (0-none, 1-mechanical layer, 2-buoyancy scheme)
+ 500.0            ! ablheight     : height of ABL in meters
+ 1                ! istable       : Stability of ABL when iablvisc=2 (1=stable, 0=netural, -1=unstable)
 # Time stepping and outputs
  00000            ! nt0           : First timestep
  1000             ! nt1           : Final timestep
@@ -39,13 +43,15 @@
  0.00             ! tipspeed ratio: Tipspeed ratio (7.55) (if given will override the given turbine RPM
  0                ! itiploss      : Tiploss(0-none, 1-Prandl, 2-Shen)
 # T1
- 96               ! ipos          : i-location turbine one
- 61               ! jpos          : j-location turbine one
- 61               ! kpos          : k-location turbine one
+ 596  55 61  0.0  0.0
 # T2
- 64               ! ipos          : i-location turbine two
- 75               ! jpos          : j-location turbine two
- 48               ! kpos          : k-location turbine two
+ 596 150 61  10.0  0.0
+# T3
+ 596 245 61 -10.0  0.0
+# T4
+ 596 340 61  0.0  10.0
+# T5
+ 596 435 61  0.0  -10.0
 
 
  kinematic viscosity of air is 1.78E-5
