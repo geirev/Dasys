@@ -2,7 +2,7 @@ module m_get_observed_measurements
 use mod_measurements
 contains
 subroutine get_observed_measurements(nrobs,itime,lmeas)
-   use m_localdefs, only : experiment
+   use m_readinfile, only : experiment
    implicit none
    integer, intent(in)     :: itime
    integer, intent(inout)  :: nrobs

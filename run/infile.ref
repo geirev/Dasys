@@ -1,7 +1,7 @@
 # Development variables
  F                ! ltiming       : CPU timing
  F                ! ltesting      : testing final solution while developing code.
- T                ! lnodump       : No saving of diagnostics or restarts while optimizing GPU code
+ F                ! ldump         : Saving of diagnostics or restarts while optimizing GPU code
  256 1 1          ! ntx, nty, ntz : number of threads per block in x, y, and z direction
  T                ! lmeasurements : Saves predicted measurements for data assimilation experiments
 # Experiment configuration

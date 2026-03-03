@@ -18,6 +18,7 @@ integer function count_parameters(fname)
           if (ch == '#') count_parameters= count_parameters + 1
        enddo
        999 close(iunit)
+       print '(a,i0)','The number of parameters is: ',count_parameters
     else
        print '(3a)', 'The file: ',trim(fname),' does not exist'
     endif

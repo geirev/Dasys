@@ -2,7 +2,7 @@ module m_runmodel
 contains
 subroutine runmodel(u,v,w,istep,lstat)
    use mod_dimensions
-   use m_localdefs
+   use m_readinfile, only : experiment,runcommand
    use m_params
    use m_read_uvw
    implicit none

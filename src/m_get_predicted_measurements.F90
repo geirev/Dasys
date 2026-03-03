@@ -2,7 +2,7 @@ module m_get_predicted_measurements
 use mod_measurements
 contains
 subroutine get_predicted_measurements(lyobs, nrobs, nrens,  iter, itime)
-   use m_localdefs, only : experiment
+   use m_readinfile, only : experiment
    implicit none
    logical, intent(out)    :: lyobs
    integer, intent(inout)  :: nrobs

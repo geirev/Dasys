@@ -3,7 +3,7 @@ contains
 subroutine diag(filetype,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
    use mod_dimensions
    use m_tecout
-   use m_localdefs, only : experiment
+   use m_readinfile, only : experiment
    implicit none
    integer, intent(in)   :: filetype
    integer, intent(in)   :: it

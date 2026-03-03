@@ -2,7 +2,7 @@ module m_loaduvw
 contains
 subroutine loaduvw(u,v,w,lreaduvw,nrens,it,istep)
    use mod_dimensions
-   use m_localdefs
+   use m_readinfile, only : experiment
    use m_params
    use m_read_uvw
    implicit none

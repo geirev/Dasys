@@ -3,7 +3,7 @@ use mod_dimensions
 contains
 subroutine ref_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens,istep)
    use mod_dimensions
-   use m_localdefs
+   use m_readinfile, only : experiment
    use m_read_uvw
    integer, intent(in)  :: nrens
    integer, intent(in)  :: istep
@@ -39,7 +39,6 @@ subroutine ref_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens,istep
    inquire(file=trim(fname),exist=ex)
    if (ex) then
       call read_uvw(fname,u,v,w)
-      print *,'u',u(1:10,ny/2,1,0)
    else
       print '(a)','Could not load u,v, and w for reference case'
    endif

@@ -99,11 +99,13 @@ OBJECTS = $(F90SOURCE:.F90=.o) $(F77SOURCE:.F=.o)
 
 all: new $(TARGET) install
 
-libs: libenkfanalysis.a -lcuda -lcublas
+libs: libenkfanalysis.a libsampling.a -lcuda -lcublas
 
+libsampling.a:
+	cd ../../EnKF_sampling/lib; make BUILD=../../Dasys/build
 
 libenkfanalysis.a:
-	cd ../../EnKF_analysis/lib; make BUILD=../../DA/build
+	cd ../../EnKF_analysis/lib; make BUILD=../../Dasys/build
 
 $(TARGET): $(INCFILES) $(OBJECTS)
 	@mkdir -p $(BUILD)

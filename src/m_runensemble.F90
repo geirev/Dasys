@@ -2,7 +2,7 @@ module m_runensemble
 contains
 subroutine runensemble(nrens,params,ndim,it,ensemble)
    use mod_dimensions
-   use m_localdefs
+   use m_readinfile, only : experiment, runcommand
    use m_read_uvw
    use m_params
    implicit none

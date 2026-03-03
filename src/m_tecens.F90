@@ -1,7 +1,7 @@
 module m_tecens
 contains
 subroutine tecens(A,ndim,nrens,nmda,it)
-   use m_localdefs, only : experiment
+   use m_readinfile, only : experiment
    implicit none
    integer, intent(in) :: ndim
    integer, intent(in) :: nrens

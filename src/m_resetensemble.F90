@@ -1,7 +1,7 @@
 module m_resetensemble
 contains
 subroutine resetensemble(nrens,it)
-   use m_localdefs
+   use m_readinfile, only : experiment
    use m_params
    implicit none
    integer, intent(in)  :: nrens
