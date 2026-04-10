@@ -11,7 +11,6 @@ subroutine read_parameters(fname, params, ndim)
    integer :: iunit, i, ios
    character(len=256) :: line
 
-   i = 0
    inquire(file=trim(fname), exist=ex)
    if (.not. ex) then
       print '(3a)', 'The file: ', trim(fname), ' does not exist'
@@ -20,6 +19,7 @@ subroutine read_parameters(fname, params, ndim)
 
    print '(a)','Uncertain parameters defined:'
    open(newunit=iunit, file=trim(fname), status='old', action='read')
+   i = 0
    do
       read(iunit,'(A)',end=999,err=999) line
       if (len_trim(line) == 0) cycle    ! skip empty lines

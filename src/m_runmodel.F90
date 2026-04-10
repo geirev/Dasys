@@ -1,57 +1,43 @@
 module m_runmodel
 contains
-subroutine runmodel(u,v,w,istep,lstat)
+subroutine runmodel(parnrtime)
    use mod_dimensions
    use m_readinfile, only : experiment,runcommand
    use m_params
    use m_read_uvw
    implicit none
-   logical, intent(out) ::lstat
-   real(kind=4), intent(out) :: u(nx,ny,nz)
-   real(kind=4), intent(out) :: v(nx,ny,nz)
-   real(kind=4), intent(out) :: w(nx,ny,nz)
-   integer,      intent(in)  :: istep
+   integer, intent(in) :: parnrtime
    integer :: iens=0
-   character(len=6) cistep
    character(len=4) ciens
-   logical exd,exf,exuvw
+   logical exd
    character(len=100) directory
    character(len=100) fname
+   character(len=200) command
 
-
-   inquire(file='infile.ref',exist=exf)
-   if (.not.exf) then
-      print *,'Make sure the infile.ref exists for running the reference case'
-      return
-   endif
-
+! setting up and running the model
    write(ciens,'(i4.4)')iens
    directory=trim(experiment)//'/mem'//ciens
    print '(a)', 'mkdir '//trim(directory)
    call system('mkdir -p '//trim(directory))
    inquire(file=trim(directory),exist=exd)
    if (.not.exd) then
-      print *,'runmodel: Problem with exd; run directory does not exist'
-      return
+      print *,'runmodel: Problem with exd; run directory does not exist:',trim(directory)
+      stop
    endif
 
-! setting up and running the model
    call system('cp measurement_loc.in '//trim(directory))
-   call system('cp infile.ref '//trim(directory)//'/infile.in')
-   call system('rm -f '//trim(directory)//'/uvw'//cistep//'.uf')
+   call system('cp uvel_time.ref '//trim(directory)//'/uvel_time.dat')
+   call system('cp infile.in '//trim(directory)//'/infile.in')
+   call system('rm -f '//trim(directory)//'/uvw0?????.uf')
    call system('cd '//trim(directory)//'; '//trim(runcommand))
 
-! Checking success (uvw*.uf) exits
-   lstat=.false.
-   write(cistep,'(i6.6)')istep
-   fname=trim(directory)//'/uvw'//cistep//'.uf'
-   inquire(file=trim(fname),exist=exuvw)
-   if (exuvw) then
-      lstat=.true.
-      call read_uvw(fname,u,v,w)
-   endif
-
-   if (.not. lstat) print *,'runmodel for reference case failed'
-
+   fname=trim(experiment)//'/tecstate_0.dat'
+   open(10,file=trim(fname))
+      write(10,'(a)')'TITLE = "State variables"'
+      write(10,'(a)')'VARIABLES = "time", "vel", "dir"'
+      write(10,'(a,i0,a)')'ZONE T="Reference", I=',parnrtime,', DATAPACKING=POINT'
+   close(10)
+   write(command,'(a,a)')'cat uvel_time.ref >> ',trim(fname)
+   call system(trim(command))
 end subroutine
 end module

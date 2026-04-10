@@ -13,7 +13,7 @@ subroutine tecout(filetype,filename,it,variables_string,num_of_variables,blankin
    character(len=*), intent(in) :: variables_string ! Variables to print separated by ,
    integer,          intent(in) :: num_of_variables ! Number of vaiables to print
 
-   integer(kind=1), intent(in)   :: blanking(nx,ny,nz)
+   integer(kind=4), intent(in)   :: blanking(nx,ny,nz)
    real(kind=4),    intent(in)   :: uave(nx,ny,nz)
    real(kind=4),    intent(in)   :: vave(nx,ny,nz)
    real(kind=4),    intent(in)   :: wave(nx,ny,nz)

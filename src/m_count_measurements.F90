@@ -18,7 +18,6 @@ integer function count_measurements(fname)
          enddo
          100 count_measurements=m
       close(iunit)
-      print '(a,i0)','The number of measurements is: ',count_measurements
    else
       print '(3a)', 'The file: ',trim(fname),' does not exist'
    endif

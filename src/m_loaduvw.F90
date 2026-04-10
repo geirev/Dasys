@@ -1,6 +1,6 @@
 module m_loaduvw
 contains
-subroutine loaduvw(u,v,w,lreaduvw,nrens,it,istep)
+subroutine loaduvw(u,v,w,nrens,it,istep)
    use mod_dimensions
    use m_readinfile, only : experiment
    use m_params
@@ -9,7 +9,6 @@ subroutine loaduvw(u,v,w,lreaduvw,nrens,it,istep)
    integer, intent(in)  :: nrens
    integer, intent(in)  :: it
    integer, intent(in)  :: istep
-   logical, intent(out) :: lreaduvw
    real(kind=4), intent(inout) :: u(nx,ny,nz,0:nrens)
    real(kind=4), intent(inout) :: v(nx,ny,nz,0:nrens)
    real(kind=4), intent(inout) :: w(nx,ny,nz,0:nrens)
@@ -22,7 +21,6 @@ subroutine loaduvw(u,v,w,lreaduvw,nrens,it,istep)
    logical ex
    integer iens
 
-
    write(cit,'(i2.2)')it
    write(cistep,'(i6.6)')istep
 
@@ -33,15 +31,12 @@ subroutine loaduvw(u,v,w,lreaduvw,nrens,it,istep)
       fname=trim(experiment)//'/mem'//ciens//'/it'//cit//'/uvw'//cistep//'.uf'
       inquire(file=trim(fname),exist=ex)
       if (ex) then
-          print *,trim(fname)
           call read_uvw(trim(fname),u(:,:,:,iens),v(:,:,:,iens),w(:,:,:,iens))
       else
          print *,'FILE:',trim(fname),' DOES NOT EXIST, COULD NOT LOAD ENSEMBLE OF U, V, AND W'
-         lreaduvw=.false.
          exit
       endif
    enddo
-   lreaduvw=.true.
 
 end subroutine
 end module

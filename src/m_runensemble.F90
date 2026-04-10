@@ -1,6 +1,6 @@
 module m_runensemble
 contains
-subroutine runensemble(nrens,params,ndim,it,ensemble)
+subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
    use mod_dimensions
    use m_readinfile, only : experiment, runcommand
    use m_read_uvw
@@ -8,7 +8,11 @@ subroutine runensemble(nrens,params,ndim,it,ensemble)
    implicit none
    integer, intent(in) :: nrens
    integer, intent(in) :: ndim
-   real, intent(in) :: ensemble(ndim,nrens)
+   integer, intent(in) :: parnr
+   integer, intent(in) :: parnrtime
+   integer, intent(in) :: pardt
+   real, target, intent(in) :: A(ndim,nrens)
+   real, pointer :: A3(:,:,:)
    type(uncertain_parameters), intent(in) :: params(ndim)
    integer, intent(in) :: it
 
@@ -20,43 +24,48 @@ subroutine runensemble(nrens,params,ndim,it,ensemble)
 
    character(len=100) :: directory
    character(len=512) :: cmd
-   character(len=12)  :: cparvalue
 
+   if (ndim /= parnrtime*parnr) error stop "runensemble: ndim /= parnrtime*parnr"
+   A3(1:parnrtime, 1:parnr, 1:nrens) => A
 
    do iens=1,nrens
-      print *,'iens=',iens
       write(ciens,'(i4.4)')iens
       write(cit,'(i2.2)')it
 
+! Generating directory for running realization
       directory=trim(experiment)//'/mem'//ciens//'/it'//cit
       call system('mkdir -p '//trim(directory))
-
       inquire(file=trim(directory),exist=exd)
-      inquire(file='infile.X',exist=exf)
-      if (exd .and. exf) then
-         call system('cp infile.X infile.tmp')
-         do i=1,ndim
-            write(cparvalue,'(f12.6)')ensemble(i,iens)
-            cmd = 'sed -i ''s/#'//trim(params(i)%parname)//'/'//trim(cparvalue)//'/'' infile.tmp'
-            print *,'exe:',trim(cmd)
-            call system(trim(cmd))
+
+! Copy infile.in to simulation directory
+      inquire(file='infile.in',exist=exf)
+      cmd = 'cp infile.in '//trim(directory)//'/infile.in'
+      call system(trim(cmd))
+
+! Generating the parameter file from ensemble file and copy to run directory
+      open(10,file='uvel_time.tmp')
+         do i=1,parnrtime
+            write(10,'(100f13.5)')real(i-1)*pardt,A3(i,1:parnr,iens)
          enddo
-         cmd = 'cp infile.tmp '//trim(directory)//'/infile.in'
+      close(10)
+      call system('cp uvel_time.tmp '//trim(directory)//'/uvel_time.dat')
+
+! Copy the measurement_loc.in to run directory
+      cmd = 'cp measurement_loc.in '//trim(directory)//'/measurement_loc.in'
+      call system(trim(cmd))
+
+      if (it > 1) then
+         cmd = 'cp '//trim(directory)//'/../it01/seed_0000.dat '//trim(directory)
          call system(trim(cmd))
-         cmd = 'cp measurement_loc.in '//trim(directory)//'/measurement_loc.in'
+         cmd = 'cp '//trim(directory)//'/../it01/seed_0000.orig '//trim(directory)
          call system(trim(cmd))
-         cmd = 'cd '//trim(directory)//'; '//trim(runcommand)//' > run.out'
-         call system(trim(cmd))
-         if (it > 1) then
-            cmd = 'cp '//trim(directory)//'/../it01/seed.dat '//trim(directory)
-            call system(trim(cmd))
-            cmd = 'cp '//trim(directory)//'/../it01/seed.orig '//trim(directory)
-            call system(trim(cmd))
-         endif
-      else
-         print *,'runens: Problem with exd or exf'
       endif
+
+      cmd = 'cd '//trim(directory)//'; '//trim(runcommand)//' > run.out'
+      call system(trim(cmd))
+
    enddo
+
    print *,'runens: ensemble simulation done!'
    print *
 

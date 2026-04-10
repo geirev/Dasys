@@ -22,6 +22,7 @@ F90SOURCE = \
 	m_readinfile.F90\
 	m_read_parameters.F90\
 	m_read_uvw.F90\
+	m_ref_parameters.F90\
 	m_ref_uvw.F90\
 	m_resetensemble.F90\
 	m_runensemble.F90\

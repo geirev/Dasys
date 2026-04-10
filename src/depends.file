@@ -17,6 +17,7 @@ main.o:      mod_measurements.o
 main.o:      m_params.o
 main.o:      m_readinfile.o
 main.o:      m_read_parameters.o
+main.o:      m_ref_parameters.o
 main.o:      m_ref_uvw.o
 main.o:      m_runensemble.o
 main.o:      m_runmodel.o
@@ -48,6 +49,8 @@ m_get_predicted_measurements.o:      m_readinfile.o
 m_iniens.o:      makefile
 m_iniens.o:      m_normal.o
 m_iniens.o:      m_params.o
+m_iniens.o:      m_pseudo1D.o
+m_iniens.o:      m_readinfile.o
 m_iniens.o:      m_resetensemble.o
 m_input_files_def.o:      makefile
 m_loaduvw.o:      makefile
@@ -61,13 +64,16 @@ mod_dimensions.o:      makefile
 mod_measurements.o:      makefile
 m_params.o:      makefile
 m_readinfile.o:      makefile
-m_readinfile.o:      m_input_files_def.o
 m_readinfile.o:      m_mkinfile.o
 m_readinfile.o:      mod_dimensions.o
 m_read_parameters.o:      makefile
 m_read_parameters.o:      m_params.o
 m_read_uvw.o:      makefile
 m_read_uvw.o:      mod_dimensions.o
+m_ref_parameters.o:      makefile
+m_ref_parameters.o:      m_params.o
+m_ref_parameters.o:      m_pseudo1D.o
+m_ref_parameters.o:      m_readinfile.o
 m_ref_uvw.o:      makefile
 m_ref_uvw.o:      mod_dimensions.o
 m_ref_uvw.o:      m_readinfile.o

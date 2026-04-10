@@ -3,13 +3,16 @@ module m_readinfile
    character(len=100)runcommand  ! Runcommand
    integer :: nrobs=0            ! Number of measurements
    integer :: nrens=0            ! Number of ensemble realizations
-   integer :: ndim=0             ! Number of uncertain parameters (n in EnKF code)
    integer :: nmda=0             ! Number of ESMDA steps
    real    :: relobserr=0.0      ! relative observation errors
+   integer :: meas_first         ! time of first measurement set (in it nr)
+   integer :: meas_last          ! time of last measurement set (in it nr)
+   integer :: meas_dt            ! time betweem meaurements (in it nr)
+   integer :: len                ! length of time domain for experiment (nt1-nt0+1)
+   integer :: cor                ! decorrelation length in time domain for parameters
 contains
 subroutine readinfile()
    use mod_dimensions 
-   use m_input_files_def
    use m_mkinfile
    implicit none
    logical ex
@@ -33,6 +36,8 @@ subroutine readinfile()
       read(10,*,err=100)nrens
       read(10,*,err=100)nmda
       read(10,*,err=100)relobserr
+      read(10,*,err=100)meas_first,meas_last,meas_dt
+      read(10,*,err=100)len,cor
    close(10)
 
    return

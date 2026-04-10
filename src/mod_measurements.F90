@@ -3,7 +3,7 @@ type measurement
    character(len=1) c
    integer i
    integer j
-   integer time
+   integer k
    real d
 end type
 type(measurement), allocatable, public :: obs(:)

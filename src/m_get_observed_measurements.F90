@@ -1,63 +1,33 @@
 module m_get_observed_measurements
 use mod_measurements
 contains
-subroutine get_observed_measurements(nrobs,itime,lmeas)
+subroutine get_observed_measurements(nrobst,mstep,mtime)
    use m_readinfile, only : experiment
    implicit none
-   integer, intent(in)     :: itime
-   integer, intent(inout)  :: nrobs
-   logical, intent(out)    :: lmeas
+   integer, intent(in)  :: mtime
+   integer, intent(in)  :: nrobst
+   integer, intent(in)  :: mstep
 
    character(len=100) :: filename
-   character(len=100) :: fname
    character(len=5)   :: ctime
    logical ex
-   integer m,i,iunit
-
-
-   nrobs=0
-
-   write(ctime,'(i5.5)')itime
-   filename='measurements_'//ctime//'.dat'
-
-! Count lines in mem0000/measurements_01000.dat
-   fname=trim(experiment)//'/mem0000/'//trim(filename)
-   inquire(file=trim(fname),exist=ex)
-   if (ex) then
-      open(newunit=iunit,file=trim(fname), status='old', action='read')
-      do
-        read(iunit,*,end=999,err=999)i
-        nrobs= nrobs + 1
-     enddo
-     999 close(iunit)
-   else
-      print '(3a)', 'The file: ',trim(fname),' does not exist'
-      return
-   endif
-
-! return if no measurements
-   if (nrobs == 0) then
-      print *,'No measurements stored'
-      return
-   endif
+   integer i,nn,m,iunit
 
 ! read all the predicted measurements
-
-   if (allocated(obs)) deallocate(obs)
-   allocate(obs(nrobs))
-   fname=trim(experiment)//'/mem0000/'//trim(filename)
-   inquire(file=trim(fname),exist=ex)
+   write(ctime,'(i5.5)')mtime
+   filename=trim(experiment)//'/mem0000'//'/measurements_'//ctime//'.dat'
+   inquire(file=trim(filename),exist=ex)
    if (ex) then
-      open(newunit=iunit,file=trim(fname), status='old', action='read')
-      do m=1,nrobs
-         read(iunit,*)i,obs(m)%c,obs(m)%i,obs(m)%j,obs(m)%d
-         write(*,'(i5,tr1,a1,i4,i4,f10.5)')m,obs(m)%c,obs(m)%i,obs(m)%j,obs(m)%d
-      enddo
+      print *,'reading file: ',trim(filename)
+      open(newunit=iunit,file=trim(filename), status='old', action='read')
+         do i=1,nrobst
+            m=(mstep-1)*nrobst+i
+            read(iunit,*)nn,obs(m)%c,obs(m)%i,obs(m)%j,obs(m)%k,obs(m)%d
+            write(*,'(i5,tr1,a1,3i4,f10.5)')m,obs(m)%c,obs(m)%i,obs(m)%j,obs(m)%k,obs(m)%d
+         enddo
       close(iunit)
-      lmeas=.true.
    else
-      print '(3a)', 'The file: ',trim(fname),' does not exist'
-      return
+      print *,'file: +',trim(filename),'+ does not exist'
    endif
 
 

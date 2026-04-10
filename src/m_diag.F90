@@ -8,7 +8,7 @@ subroutine diag(filetype,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,
    integer, intent(in)   :: filetype
    integer, intent(in)   :: it
    integer, intent(in)   :: istep
-   integer(kind=1), intent(in)   :: blanking(nx,ny,nz)
+   integer(kind=4), intent(in)   :: blanking(nx,ny,nz)
    real(kind=4),    intent(in)   :: uave(nx,ny,nz)
    real(kind=4),    intent(in)   :: vave(nx,ny,nz)
    real(kind=4),    intent(in)   :: wave(nx,ny,nz)
@@ -40,7 +40,7 @@ subroutine diag(filetype,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,
       num_of_vars=8
    endif
 
-   call tecout(filetype,trim(experiment)//'/tecda'//trim(cistep)//'.plt',it,trim(variables),num_of_vars,blanking,&
+   call tecout(filetype,trim(experiment)//'/tecda'//trim(cistep)//'.plt',istep,trim(variables),num_of_vars,blanking,&
                             uave,vave,wave,velave,ustd,vstd,wstd,velstd)
 
 end subroutine
