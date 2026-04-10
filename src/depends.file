@@ -6,6 +6,7 @@ main.o:      m_check_input_files.o
 main.o:      m_count_measurements.o
 main.o:      m_count_parameters.o
 main.o:      m_diag.o
+main.o:      m_finens.o
 main.o:      m_get_observed_measurements.o
 main.o:      m_get_predicted_measurements.o
 main.o:      m_iniens.o
@@ -40,6 +41,7 @@ m_diag.o:      makefile
 m_diag.o:      mod_dimensions.o
 m_diag.o:      m_readinfile.o
 m_diag.o:      m_tecout.o
+m_finens.o:      makefile
 m_get_observed_measurements.o:      makefile
 m_get_observed_measurements.o:      mod_measurements.o
 m_get_observed_measurements.o:      m_readinfile.o

@@ -9,6 +9,7 @@ F90SOURCE = \
 	m_count_measurements.F90\
 	m_count_parameters.F90\
 	m_diag.F90\
+	m_finens.F90\
 	m_get_observed_measurements.F90\
 	m_get_predicted_measurements.F90\
 	m_iniens.F90\

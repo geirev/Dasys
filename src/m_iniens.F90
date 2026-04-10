@@ -41,17 +41,35 @@ subroutine iniens(A,nrens,params,ndim,parnr,parnrtime,pardt)
       close(iunit)
       print '(a,i0,a,i0,a)','Read iniens.uf of dimensions: (',i,'x',j,') (y/n)?'
       read(*,*)yn
+      if (yn.eq.'y' .and. i==ndim .and. j==nrens) then
+         open(newunit=iunit, file='iniens.uf', form='unformatted', access='direct', recl=reclA)
+            do j=1,nrens
+               read(iunit,rec=j)i,jtmp,A(:,j)
+            enddo
+         close(iunit)
+         print *,'iniens: initial A read from iniens.uf!'
+         return
+      endif
    endif
 
-   if (ex .and. yn.eq.'y' .and. i==ndim .and. j==nrens) then
-      open(newunit=iunit, file='iniens.uf', form='unformatted', access='direct', recl=reclA)
-         do j=1,nrens
-            read(iunit,rec=j)i,jtmp,A(:,j)
-         enddo
+   inquire(file='finens.uf',exist=ex)
+   if (ex) then
+      open(newunit=iunit, file='finens.uf', form='unformatted', access='direct', recl=reclA)
+      read(iunit,rec=1)i,j
       close(iunit)
-      print *,'iniens: initial A read from iniens.uf!'
-      return
+      print '(a,i0,a,i0,a)','Read finens.uf of dimensions: (',i,'x',j,') (y/n)?'
+      read(*,*)yn
+      if (yn.eq.'y' .and. i==ndim .and. j==nrens) then
+         open(newunit=iunit, file='finens.uf', form='unformatted', access='direct', recl=reclA)
+            do j=1,nrens
+               read(iunit,rec=j)i,jtmp,A(:,j)
+            enddo
+         close(iunit)
+         print *,'iniens: initial A read from posterior finens.uf!'
+         return
+      endif
    endif
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! if yn='n' then regenerate initial ensemble

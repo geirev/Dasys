@@ -2,7 +2,7 @@ module m_get_predicted_measurements
 use mod_measurements
 contains
 subroutine get_predicted_measurements(nrobst, mstep, mtime, jens, it)
-   use m_readinfile, only : experiment
+   use m_readinfile, only : experiment,itdirs
    implicit none
    integer, intent(in)  :: nrobst
    integer, intent(in)  :: mstep
@@ -29,7 +29,11 @@ subroutine get_predicted_measurements(nrobst, mstep, mtime, jens, it)
 ! read all the predicted measurements
    write(cit,'(i2.2)')it
    write(cens,'(i4.4)')jens
-   fname=trim(experiment)//'/mem'//cens//'/it'//cit//'/'//trim(filename)
+   if (itdirs) then
+      fname=trim(experiment)//'/mem'//cens//'/it'//cit//'/'//trim(filename)
+   else
+      fname=trim(experiment)//'/mem'//cens//'/'//trim(filename)
+   endif
    print *,trim(fname)
    inquire(file=trim(fname),exist=ex)
    if (ex) then

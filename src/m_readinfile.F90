@@ -10,6 +10,7 @@ module m_readinfile
    integer :: meas_dt            ! time betweem meaurements (in it nr)
    integer :: len                ! length of time domain for experiment (nt1-nt0+1)
    integer :: cor                ! decorrelation length in time domain for parameters
+   logical :: itdirs=.false.     ! if true each iteration is run in a separate dir (e.g., mem0001/it05)
 contains
 subroutine readinfile()
    use mod_dimensions 

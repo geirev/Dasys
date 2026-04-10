@@ -29,6 +29,7 @@ program main
    use m_runensemble
    use m_runmodel
    use m_tecens
+   use m_finens
 
    implicit none
 
@@ -137,7 +138,7 @@ program main
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Running reference solution
-   print '(a)','Running reference simulation starting from infile.ref.'
+   print '(a)','Running reference simulation starting from infile.in.'
    call runmodel(parnrtime)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -241,6 +242,8 @@ program main
       call tecens(A,ndim,nrens,parnr,parnrtime,pardt,it,nmda)
 
    enddo
+
+   call finens(A,ndim,nrens)
 
 end program
 

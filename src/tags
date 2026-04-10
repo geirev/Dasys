@@ -8,6 +8,7 @@ count_measurements	m_count_measurements.F90	/^module
 count_parameters	m_count_parameters.F90	/^module
 diag	m_diag.F90	/^module
 dimensions	mod_dimensions.F90	/^module
+finens	m_finens.F90	/^module
 get_observed_measurements	m_get_observed_measurements.F90	/^module
 get_predicted_measurements	m_get_predicted_measurements.F90	/^module
 iniens	m_iniens.F90	/^module
@@ -26,6 +27,7 @@ m_correlation	m_correlation.F90	/^module
 m_count_measurements	m_count_measurements.F90	/^module
 m_count_parameters	m_count_parameters.F90	/^module
 m_diag	m_diag.F90	/^module
+m_finens	m_finens.F90	/^module
 m_get_observed_measurements	m_get_observed_measurements.F90	/^module
 m_get_predicted_measurements	m_get_predicted_measurements.F90	/^module
 m_iniens	m_iniens.F90	/^module

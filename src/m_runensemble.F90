@@ -2,7 +2,7 @@ module m_runensemble
 contains
 subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
    use mod_dimensions
-   use m_readinfile, only : experiment, runcommand
+   use m_readinfile, only : experiment, runcommand, itdirs
    use m_read_uvw
    use m_params
    implicit none
@@ -33,7 +33,11 @@ subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
       write(cit,'(i2.2)')it
 
 ! Generating directory for running realization
-      directory=trim(experiment)//'/mem'//ciens//'/it'//cit
+      if (itdirs) then
+         directory=trim(experiment)//'/mem'//ciens//'/it'//cit
+      else
+         directory=trim(experiment)//'/mem'//ciens
+      endif
       call system('mkdir -p '//trim(directory))
       inquire(file=trim(directory),exist=exd)
 
@@ -54,14 +58,15 @@ subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
       cmd = 'cp measurement_loc.in '//trim(directory)//'/measurement_loc.in'
       call system(trim(cmd))
 
-      if (it > 1) then
+      if ((it > 1).and.(itdirs)) then
          cmd = 'cp '//trim(directory)//'/../it01/seed_0000.dat '//trim(directory)
          call system(trim(cmd))
          cmd = 'cp '//trim(directory)//'/../it01/seed_0000.orig '//trim(directory)
          call system(trim(cmd))
       endif
 
-      cmd = 'cd '//trim(directory)//'; '//trim(runcommand)//' > run.out'
+      write(*,'(a,i0,tr1,a)')'iteration ',it,trim(directory)
+      cmd = 'cd '//trim(directory)//' > /dev/null ; '//trim(runcommand)//' > run.out'
       call system(trim(cmd))
 
    enddo
