@@ -17,6 +17,7 @@ F90SOURCE = \
 	m_loaduvw.F90\
 	m_mkinfile.F90\
 	m_normal.F90\
+	m_normalize_ensemble.F90\
 	mod_dimensions.F90\
 	mod_measurements.F90\
 	m_params.F90\
@@ -28,6 +29,7 @@ F90SOURCE = \
 	m_resetensemble.F90\
 	m_runensemble.F90\
 	m_runmodel.F90\
+	m_smooth_random_series.F90\
 	m_standarddev.F90\
 	m_string.F90\
 	m_tecens.F90\

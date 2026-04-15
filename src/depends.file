@@ -12,6 +12,7 @@ main.o:      m_get_predicted_measurements.o
 main.o:      m_iniens.o
 main.o:      m_input_files_def.o
 main.o:      m_loaduvw.o
+main.o:      m_normalize_ensemble.o
 main.o:      m_normal.o
 main.o:      mod_dimensions.o
 main.o:      mod_measurements.o
@@ -22,6 +23,7 @@ main.o:      m_ref_parameters.o
 main.o:      m_ref_uvw.o
 main.o:      m_runensemble.o
 main.o:      m_runmodel.o
+main.o:      m_smooth_random_series.o
 main.o:      m_tecens.o
 m_ansi_colors.o:      makefile
 m_assimilation.o:      makefile
@@ -61,6 +63,7 @@ m_loaduvw.o:      m_params.o
 m_loaduvw.o:      m_readinfile.o
 m_loaduvw.o:      m_read_uvw.o
 m_mkinfile.o:      makefile
+m_normalize_ensemble.o:      makefile
 m_normal.o:      makefile
 mod_dimensions.o:      makefile
 mod_measurements.o:      makefile
@@ -84,15 +87,19 @@ m_resetensemble.o:      makefile
 m_resetensemble.o:      m_params.o
 m_resetensemble.o:      m_readinfile.o
 m_runensemble.o:      makefile
+m_runensemble.o:      m_input_files_def.o
 m_runensemble.o:      mod_dimensions.o
 m_runensemble.o:      m_params.o
 m_runensemble.o:      m_readinfile.o
 m_runensemble.o:      m_read_uvw.o
 m_runmodel.o:      makefile
+m_runmodel.o:      m_input_files_def.o
 m_runmodel.o:      mod_dimensions.o
 m_runmodel.o:      m_params.o
 m_runmodel.o:      m_readinfile.o
 m_runmodel.o:      m_read_uvw.o
+m_smooth_random_series.o:      makefile
+m_smooth_random_series.o:      m_normal.o
 m_standarddev.o:      makefile
 m_string.o:      makefile
 m_tecens.o:      makefile

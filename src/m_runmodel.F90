@@ -5,6 +5,7 @@ subroutine runmodel(parnrtime)
    use m_readinfile, only : experiment,runcommand
    use m_params
    use m_read_uvw
+   use m_input_files_def, only : measurment_locations_file
    implicit none
    integer, intent(in) :: parnrtime
    integer :: iens=0
@@ -12,7 +13,7 @@ subroutine runmodel(parnrtime)
    logical exd
    character(len=100) directory
    character(len=100) fname
-   character(len=200) command
+   character(len=512) :: cmd
 
 ! setting up and running the model
    write(ciens,'(i4.4)')iens
@@ -25,7 +26,8 @@ subroutine runmodel(parnrtime)
       stop
    endif
 
-   call system('cp measurement_loc.in '//trim(directory))
+   cmd = 'cp '//trim(measurment_locations_file)//' '//trim(directory)//'/measurement_loc.in'
+   call system(trim(cmd))
    call system('cp uvel_time.ref '//trim(directory)//'/uvel_time.dat')
    call system('cp infile.in '//trim(directory)//'/infile.in')
    call system('rm -f '//trim(directory)//'/uvw0?????.uf')
@@ -37,7 +39,7 @@ subroutine runmodel(parnrtime)
       write(10,'(a)')'VARIABLES = "time", "vel", "dir"'
       write(10,'(a,i0,a)')'ZONE T="Reference", I=',parnrtime,', DATAPACKING=POINT'
    close(10)
-   write(command,'(a,a)')'cat uvel_time.ref >> ',trim(fname)
-   call system(trim(command))
+   write(cmd,'(a,a)')'cat uvel_time.ref >> ',trim(fname)
+   call system(trim(cmd))
 end subroutine
 end module

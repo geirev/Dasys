@@ -5,6 +5,7 @@ subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
    use m_readinfile, only : experiment, runcommand, itdirs
    use m_read_uvw
    use m_params
+   use m_input_files_def, only : measurment_locations_file
    implicit none
    integer, intent(in) :: nrens
    integer, intent(in) :: ndim
@@ -55,7 +56,7 @@ subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
       call system('cp uvel_time.tmp '//trim(directory)//'/uvel_time.dat')
 
 ! Copy the measurement_loc.in to run directory
-      cmd = 'cp measurement_loc.in '//trim(directory)//'/measurement_loc.in'
+      cmd = 'cp '//trim(measurment_locations_file)//' '//trim(directory)//'/measurement_loc.in'
       call system(trim(cmd))
 
       if ((it > 1).and.(itdirs)) then

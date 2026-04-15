@@ -24,7 +24,7 @@ subroutine count_parameters(fname,parnr,parnrtime,pardt,ndim)
           if (ch == '#') parnr= parnr + 1
        enddo
        999 close(iunit)
-       print '(a,i0)','The number of parameters types is:         ',parnr
+       print '(a,i0)','The number of parameter types is:          ',parnr
        print '(a,i0)','The number of parameter values in time is: ',parnrtime
        print '(a,i0)','The deta t between parameter values in is: ',pardt
        ndim=parnr*parnrtime

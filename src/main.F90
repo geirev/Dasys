@@ -2,6 +2,9 @@ program main
    use iso_c_binding
 !   use iso_fortran_env
 
+   use m_smooth_random_series
+   use m_normalize_ensemble
+
    use mod_dimensions
    use mod_measurements
    use m_readinfile
@@ -82,8 +85,44 @@ program main
    integer parnrtime,pardt,parnr,ndim
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Initialization
-  !call set_random_seed2()
+!!! TEST AR
+
+   real ft2(0:10,100)
+   integer i,l
+   real startval
+   real startder
+   real endval(100)
+   real endder(100)
+   real ave
+   real var
+   real lambda
+   open(10,file='ts.dat')
+      do l=1,10
+         do i=1,100
+            if (l==1) then
+               startval=normal()
+               lambda = sqrt(3.0) / 50000.0
+               startder = lambda * normal()
+            else
+               startval=endval(i)
+               startder=endder(i)
+            endif
+            call smooth_random_series(ft2(0,i), 11, 1000.0, 50000.0, startval, startder, endval(i), endder(i))
+         enddo
+
+         !call normalize_ensemble(ft2,11,100)
+
+         do i=1,10
+            ave = sum(ft2(i,:)) / 100.0
+            var = sum( (ft2(i,:) - ave)**2 ) / 100.0
+            write(10,'(i5,tr1,f12.2,102f7.3)')i,real(l-1)*10000.0+real(i)*1000.0,ave,sqrt(var),ft2(i,1:100)
+         enddo
+      enddo
+   close(10)
+   stop
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
    call readinfile()
 
@@ -121,20 +160,20 @@ program main
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Counting the number of measurements "nrobs"
-   nrobst     = count_measurements('measurement_loc.in')
+   nrobst     = count_measurements(trim(measurment_locations_file))
    nrobs_steps= (meas_last-meas_first+meas_dt)/meas_dt
    nrobs=nrobst*nrobs_steps
    allocate(obs(nrobs))
    allocate(yensemble(nrobs,nrens))
    print *
    print '(a,i0)','Number of measurements per step is     nrobst= ',nrobst
-   print '(a,i0)','Total number of measurments is          nrobs= ',nrobs
    print '(a,i0)','Number of steps with measurements nrobs_steps= ',nrobs_steps
+   print '(a,i0)','Total number of measurments is          nrobs= ',nrobs
    print *
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Defining the uncertain parameters of the reference case
-   call ref_parameters(params,parnr,parnrtime,pardt)
+   call ref_parameters(experiment,params,parnr,parnrtime,pardt)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Running reference solution
@@ -170,7 +209,7 @@ program main
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    print '(a)','Initializing the ensemble of uncertain parameters.'
-   call iniens(A,nrens,params,ndim,parnr,parnrtime,pardt)
+   call iniens(A,trim(experiment),nrens,params,ndim,parnr,parnrtime,pardt)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    it=1
@@ -243,7 +282,7 @@ program main
 
    enddo
 
-   call finens(A,ndim,nrens)
+   call finens(A,trim(experiment),ndim,nrens)
 
 end program
 

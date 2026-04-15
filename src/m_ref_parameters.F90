@@ -1,6 +1,6 @@
 module m_ref_parameters
 contains
-subroutine ref_parameters(params,parnr,parnrtime,pardt)
+subroutine ref_parameters(experiment,params,parnr,parnrtime,pardt)
    use m_params
    use m_pseudo1D
    use m_readinfile, only : cor,len
@@ -8,6 +8,8 @@ subroutine ref_parameters(params,parnr,parnrtime,pardt)
    integer, intent(in) :: parnr
    integer, intent(in) :: parnrtime
    integer, intent(in) :: pardt
+   character(len=*)    :: experiment
+   character(len=100)  :: fname
 
    type(uncertain_parameters), intent(in) :: params(parnr)
 
@@ -19,8 +21,9 @@ subroutine ref_parameters(params,parnr,parnrtime,pardt)
    real dx,cor1,xlength
    integer n1
 
+   fname=trim(experiment)//'/uvel_time.ref'
    yn='n'
-   inquire(file='uvel_time.ref',exist=ex)
+   inquire(file=trim(fname),exist=ex)
    if (ex) then
       print '(a,i0,a,i0,a)','Use parameters in existing uvel_time.ref for reference simulation (y/n)?'
       read(*,*)yn
@@ -44,15 +47,9 @@ subroutine ref_parameters(params,parnr,parnrtime,pardt)
       enddo
    enddo
 
-   open(10,file='tec_ref.dat')
-      do i=1,parnrtime
-         write(10,'(i3,2000f13.5)')i,(i-1)*dx,samples(i,1:min(parnr,1000))
-      enddo
-   close(10)
+   if (ex) call system('mv '//trim(fname)//' '//trim(fname)//'bak')
 
-   if (ex) call system('mv uvel_time.ref uvel_time.bak')
-
-   open(10,file='uvel_time.ref')
+   open(10,file=trim(fname))
       do i=1,parnrtime
          write(10,'(100f13.5)')real(i-1)*pardt,samples(i,1:parnr)
       enddo
