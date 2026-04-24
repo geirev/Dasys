@@ -1,70 +1,76 @@
 module m_runensemble
 contains
-subroutine runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
+subroutine runensemble(A,nrens,ndim,it)
    use mod_dimensions
-   use m_readinfile, only : experiment, runcommand, itdirs
+   use m_readinfile, only : experiment, runcommand, iwin, nmda
    use m_read_uvw
-   use m_params
+   use m_parameters, only : parnr,parnrtime,pardt
    use m_input_files_def, only : measurment_locations_file
    implicit none
    integer, intent(in) :: nrens
    integer, intent(in) :: ndim
-   integer, intent(in) :: parnr
-   integer, intent(in) :: parnrtime
-   integer, intent(in) :: pardt
    real, target, intent(in) :: A(ndim,nrens)
    real, pointer :: A3(:,:,:)
-   type(uncertain_parameters), intent(in) :: params(ndim)
    integer, intent(in) :: it
 
+   real time
    character(len=4) ciens
-   character(len=2) cit
 
-   logical exd,exf
    integer iens,i
 
+   character(len=100) :: fname
    character(len=100) :: directory
    character(len=512) :: cmd
 
-   if (ndim /= parnrtime*parnr) error stop "runensemble: ndim /= parnrtime*parnr"
-   A3(1:parnrtime, 1:parnr, 1:nrens) => A
+   A3(0:parnrtime, 1:parnr, 1:nrens) => A
 
    do iens=1,nrens
       write(ciens,'(i4.4)')iens
-      write(cit,'(i2.2)')it
 
 ! Generating directory for running realization
-      if (itdirs) then
-         directory=trim(experiment)//'/mem'//ciens//'/it'//cit
-      else
-         directory=trim(experiment)//'/mem'//ciens
-      endif
+      directory=trim(experiment)//'/mem'//ciens
       call system('mkdir -p '//trim(directory))
-      inquire(file=trim(directory),exist=exd)
 
 ! Copy infile.in to simulation directory
-      inquire(file='infile.in',exist=exf)
       cmd = 'cp infile.in '//trim(directory)//'/infile.in'
       call system(trim(cmd))
 
-! Generating the parameter file from ensemble file and copy to run directory
-      open(10,file='uvel_time.tmp')
-         do i=1,parnrtime
-            write(10,'(100f13.5)')real(i-1)*pardt,A3(i,1:parnr,iens)
+! Generating the parameter file from ensemble file and write to run directory
+      open(10,file=trim(directory)//'/uvel_time.dat')
+         do i=0,parnrtime
+            time = real((iwin-1)*parnrtime + i) * real(pardt)
+            write(10,'(100f13.5)')time,A3(i,1:parnr,iens)
          enddo
       close(10)
-      call system('cp uvel_time.tmp '//trim(directory)//'/uvel_time.dat')
+
+      if (it == 1) then
+         fname=trim(directory)//'/tecstate_1.dat'
+         if (iwin == 1) then
+            open(10,file=trim(fname))
+               write(10,'(a)')'TITLE = "Prior state variables"'
+               write(10,'(a)')'VARIABLES = "time", "vel", "dir"'
+               write(10,'(a)')'ZONE T="Prior", I=XXX, DATAPACKING=POINT'
+            close(10)
+         endif
+         write(cmd,'(a,a)')'cat '//trim(directory)//'/uvel_time.dat >> ',trim(fname)
+         call system(trim(cmd))
+      elseif (it == nmda+1) then
+         fname=trim(directory)//'/tecstate_2.dat'
+         if (iwin == 1) then
+            open(10,file=trim(fname))
+               write(10,'(a)')'TITLE = "Posterior state variables"'
+               write(10,'(a)')'VARIABLES = "time", "vel", "dir"'
+               write(10,'(a)')'ZONE T="Posterior", I=XXX, DATAPACKING=POINT'
+            close(10)
+         endif
+         write(cmd,'(a,a)')'cat '//trim(directory)//'/uvel_time.dat >> ',trim(fname)
+         call system(trim(cmd))
+      endif
+
 
 ! Copy the measurement_loc.in to run directory
       cmd = 'cp '//trim(measurment_locations_file)//' '//trim(directory)//'/measurement_loc.in'
       call system(trim(cmd))
-
-      if ((it > 1).and.(itdirs)) then
-         cmd = 'cp '//trim(directory)//'/../it01/seed_0000.dat '//trim(directory)
-         call system(trim(cmd))
-         cmd = 'cp '//trim(directory)//'/../it01/seed_0000.orig '//trim(directory)
-         call system(trim(cmd))
-      endif
 
       write(*,'(a,i0,tr1,a)')'iteration ',it,trim(directory)
       cmd = 'cd '//trim(directory)//' > /dev/null ; '//trim(runcommand)//' > run.out'

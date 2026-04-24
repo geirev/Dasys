@@ -2,8 +2,10 @@ program main
    use iso_c_binding
 !   use iso_fortran_env
 
-   use m_smooth_random_series
-   use m_normalize_ensemble
+   use m_set_random_seed
+   use m_simulate_forcing
+   use m_reference_forcing
+   use m_ensemble_forcing
 
    use mod_dimensions
    use mod_measurements
@@ -13,11 +15,9 @@ program main
 
    use m_assimilation
    use m_average_uvw
-   use m_check_input_files
 
-   use m_params
-   use m_count_parameters
-   use m_read_parameters
+   use m_parameters
+
    use m_ref_parameters
 
    use m_count_measurements
@@ -58,10 +58,6 @@ program main
    integer :: mode=13
 
    real, allocatable :: ref(:)
-!   character(len=200) :: cmd
-!   character(len=100) :: tmpfile
-
-   type(uncertain_parameters), allocatable :: params(:)
 
    real, allocatable, dimension(:)    :: mean
    real, allocatable, dimension(:,:)  :: Y,D,E,A,S,O
@@ -82,51 +78,11 @@ program main
    real(kind=4), allocatable :: velstd(:,:,:)
 
 
-   integer parnrtime,pardt,parnr,ndim
+   integer ndim
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!! TEST AR
-
-   real ft2(0:10,100)
-   integer i,l
-   real startval
-   real startder
-   real endval(100)
-   real endder(100)
-   real ave
-   real var
-   real lambda
-   open(10,file='ts.dat')
-      do l=1,10
-         do i=1,100
-            if (l==1) then
-               startval=normal()
-               lambda = sqrt(3.0) / 50000.0
-               startder = lambda * normal()
-            else
-               startval=endval(i)
-               startder=endder(i)
-            endif
-            call smooth_random_series(ft2(0,i), 11, 1000.0, 50000.0, startval, startder, endval(i), endder(i))
-         enddo
-
-         !call normalize_ensemble(ft2,11,100)
-
-         do i=1,10
-            ave = sum(ft2(i,:)) / 100.0
-            var = sum( (ft2(i,:) - ave)**2 ) / 100.0
-            write(10,'(i5,tr1,f12.2,102f7.3)')i,real(l-1)*10000.0+real(i)*1000.0,ave,sqrt(var),ft2(i,1:100)
-         enddo
-      enddo
-   close(10)
-   stop
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
+ !  call set_random_seed()
 
    call readinfile()
-
-   call check_input_files()
 
 ! allocate ensemble of model solution variables
    if (.not. allocated(u)) allocate(u(nx,ny,nz,0:nrens))
@@ -145,22 +101,15 @@ program main
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Calulating and reading the number of uncertain parameters "ndim" and allocating them
-   call count_parameters(parameter_file,parnr,parnrtime,pardt,ndim)
-   if (parnr > 0) then
-      if (.not.allocated(params)) allocate(params(parnr))
-      call  read_parameters(parameter_file,params,parnr)
-      if (.not.allocated(A)) allocate(A(ndim,nrens))
-      if (.not.allocated(ref)) allocate(ref(ndim))
-   else
-      print *,'ndim = 0'
-      stop
-   endif
+! Counting and reading the number of uncertain parameters "ndim" and allocating them
+   call parameters(ndim)
+   if (.not.allocated(A)) allocate(A(ndim,nrens))
+   if (.not.allocated(ref)) allocate(ref(ndim))
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Counting the number of measurements "nrobs"
-   nrobst     = count_measurements(trim(measurment_locations_file))
+   nrobst     = count_measurements()
    nrobs_steps= (meas_last-meas_first+meas_dt)/meas_dt
    nrobs=nrobst*nrobs_steps
    allocate(obs(nrobs))
@@ -171,14 +120,15 @@ program main
    print '(a,i0)','Total number of measurments is          nrobs= ',nrobs
    print *
 
+   !call simulate_forcing(ndim,nwin,nrens)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Defining the uncertain parameters of the reference case
-   call ref_parameters(experiment,params,parnr,parnrtime,pardt)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Running reference solution
-   print '(a)','Running reference simulation starting from infile.in.'
-   call runmodel(parnrtime)
+   print '(a)','Running reference simulation.'
+   call reference_forcing()
+   call runmodel()
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Printing grid
@@ -209,12 +159,13 @@ program main
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    print '(a)','Initializing the ensemble of uncertain parameters.'
-   call iniens(A,trim(experiment),nrens,params,ndim,parnr,parnrtime,pardt)
+!   call iniens(A,trim(experiment),nrens,ndim)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    it=1
    print '(a)','Running prior ensemble.'
-   call runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
+   call ensemble_forcing(A,nrens,ndim)
+   call runensemble(A,nrens,ndim,it)
 
    print *,'Diagnoistics of prior ensemble it=',it
    do istep=meas_first,meas_last,meas_dt
@@ -222,7 +173,7 @@ program main
       call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
       call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
    enddo
-   call tecens(A,ndim,nrens,parnr,parnrtime,pardt,it,nmda)
+   call tecens(A,ndim,nrens,it,nmda)
 
    do it=2,nmda+1
       print '(a,i0)','Assembling predicted measurements, nrobs=',nrobs
@@ -270,7 +221,7 @@ program main
       call assimilation(ndim,nrens,nrobs,A,O,E,Y,S,mode)
 
       print '(a)','Run posterior ensemble'
-      call runensemble(A,nrens,params,ndim,parnr,parnrtime,pardt,it)
+      call runensemble(A,nrens,ndim,it)
 
       print *,'Diagnoistics it=',it
       do istep=meas_first,meas_last,meas_dt
@@ -278,11 +229,11 @@ program main
          call average_uvw(u,v,w,uave,vave,wave,velave,ustd,vstd,wstd,velstd,nrens)
          call diag(2,istep,it,blanking,uave,vave,wave,velave,ustd,vstd,wstd,velstd)
       enddo
-      call tecens(A,ndim,nrens,parnr,parnrtime,pardt,it,nmda)
 
    enddo
 
-   call finens(A,trim(experiment),ndim,nrens)
+   call tecens(A,ndim,nrens,it-1,nmda)
+   call finens(A,ndim,nrens)
 
 end program
 

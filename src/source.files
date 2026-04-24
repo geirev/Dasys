@@ -7,8 +7,8 @@ F90SOURCE = \
 	m_check_input_files.F90\
 	m_correlation.F90\
 	m_count_measurements.F90\
-	m_count_parameters.F90\
 	m_diag.F90\
+	m_ensemble_forcing.F90\
 	m_finens.F90\
 	m_get_observed_measurements.F90\
 	m_get_predicted_measurements.F90\
@@ -20,15 +20,17 @@ F90SOURCE = \
 	m_normalize_ensemble.F90\
 	mod_dimensions.F90\
 	mod_measurements.F90\
-	m_params.F90\
+	m_parameters.F90\
 	m_readinfile.F90\
-	m_read_parameters.F90\
 	m_read_uvw.F90\
+	m_reference_forcing.F90\
 	m_ref_parameters.F90\
 	m_ref_uvw.F90\
 	m_resetensemble.F90\
 	m_runensemble.F90\
 	m_runmodel.F90\
+	m_set_random_seed.F90\
+	m_simulate_forcing.F90\
 	m_smooth_random_series.F90\
 	m_standarddev.F90\
 	m_string.F90\

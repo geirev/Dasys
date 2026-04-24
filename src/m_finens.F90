@@ -1,15 +1,18 @@
 module m_finens
 contains
-subroutine finens(A,experiment,ndim,nrens)
+subroutine finens(A,ndim,nrens)
+   use m_readinfile, only : iwin, experiment
    implicit none
    integer, intent(in) :: ndim
    integer, intent(in) :: nrens
    real, intent(in) :: A(ndim,nrens)
    integer j,reclA,iunit
-   character(len=*) experiment
    character(len=100) ensfile
+   character(len=4) :: cwin
 
-   ensfile=trim(experiment)//'/finens.uf'
+   write(cwin,'(i4.4)')iwin
+   !ensfile=trim(experiment)//'/ensemble'//cwin//'A.uf'
+   ensfile=trim(experiment)//'/ensemble.uf'
    inquire(iolength=reclA)ndim,nrens,A(:,1)
    open(newunit=iunit, file=trim(ensfile), form='unformatted', access='direct', recl=reclA)
       do j=1,nrens

@@ -8,15 +8,15 @@ module m_readinfile
    integer :: meas_first         ! time of first measurement set (in it nr)
    integer :: meas_last          ! time of last measurement set (in it nr)
    integer :: meas_dt            ! time betweem meaurements (in it nr)
-   integer :: len                ! length of time domain for experiment (nt1-nt0+1)
-   integer :: cor                ! decorrelation length in time domain for parameters
-   logical :: itdirs=.false.     ! if true each iteration is run in a separate dir (e.g., mem0001/it05)
+   integer :: nwin               ! length of time domain for experiment (nt1-nt0+1)
+   integer :: iwin               ! assimilation window number
 contains
 subroutine readinfile()
-   use mod_dimensions 
+   use mod_dimensions
    use m_mkinfile
    implicit none
    logical ex
+   character(len=100) :: cmd
    character(len=8) :: fname='dasys.in'
 
    inquire(file='main.F90',exist=ex)
@@ -38,8 +38,12 @@ subroutine readinfile()
       read(10,*,err=100)nmda
       read(10,*,err=100)relobserr
       read(10,*,err=100)meas_first,meas_last,meas_dt
-      read(10,*,err=100)len,cor
+      read(10,*,err=100)nwin
+      read(10,*,err=100)iwin
    close(10)
+
+   cmd='mkdir -p '//trim(experiment)
+   call system(trim(cmd))
 
    return
    100 close(10)

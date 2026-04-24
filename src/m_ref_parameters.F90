@@ -1,17 +1,11 @@
 module m_ref_parameters
 contains
-subroutine ref_parameters(experiment,params,parnr,parnrtime,pardt)
-   use m_params
+subroutine ref_parameters()
+   use m_parameters, only : params,pardt,parnr,parnrtime,lcorr
    use m_pseudo1D
-   use m_readinfile, only : cor,len
+   use m_readinfile, only : nwin,experiment
    implicit none
-   integer, intent(in) :: parnr
-   integer, intent(in) :: parnrtime
-   integer, intent(in) :: pardt
-   character(len=*)    :: experiment
    character(len=100)  :: fname
-
-   type(uncertain_parameters), intent(in) :: params(parnr)
 
    real, allocatable :: samples(:,:)
 
@@ -33,9 +27,9 @@ subroutine ref_parameters(experiment,params,parnr,parnrtime,pardt)
    allocate(samples(parnrtime,parnr))
 
 ! Correction for Gaussian variogram 
-   cor1=real(cor)
+   cor1=real(lcorr)
    cor1=cor1/sqrt(3.0)
-   xlength=real(len)
+   xlength=real(nwin)
    dx=xlength/float(parnrtime)
    n1=2*nint(real(parnrtime)*cor1/(2.0*dx))
    print '(2(a,i5),a,f10.3)','parnrtime=',parnrtime,', n1=',n1,', dt=',dx

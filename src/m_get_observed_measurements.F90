@@ -9,12 +9,12 @@ subroutine get_observed_measurements(nrobst,mstep,mtime)
    integer, intent(in)  :: mstep
 
    character(len=100) :: filename
-   character(len=5)   :: ctime
+   character(len=6)   :: ctime
    logical ex
    integer i,nn,m,iunit
 
 ! read all the predicted measurements
-   write(ctime,'(i5.5)')mtime
+   write(ctime,'(i6.6)')mtime
    filename=trim(experiment)//'/mem0000'//'/measurements_'//ctime//'.dat'
    inquire(file=trim(filename),exist=ex)
    if (ex) then

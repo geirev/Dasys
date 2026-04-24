@@ -1,20 +1,16 @@
 module m_iniens
 contains
-subroutine iniens(A,experiment,nrens,params,ndim,parnr,parnrtime,pardt)
-   use m_params
+subroutine iniens(A,experiment,nrens,ndim)
+   use m_parameters, only : params,parnr,parnrtime,lcorr
    use m_pseudo1D
    use m_normal
    use m_resetensemble
-   use m_readinfile, only : cor,len
+   use m_readinfile, only : nwin
    implicit none
    integer, intent(in) :: nrens
    integer, intent(in) :: ndim
-   integer, intent(in) :: parnr
-   integer, intent(in) :: parnrtime
-   integer, intent(in) :: pardt
    character(len=*), intent(in) :: experiment
 
-   type(uncertain_parameters), intent(in) :: params(parnr)
 
    real, target, intent(out) :: A(ndim,nrens)
    real, pointer :: A2(:,:)
@@ -69,9 +65,9 @@ subroutine iniens(A,experiment,nrens,params,ndim,parnr,parnrtime,pardt)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! if yn='n' then regenerate initial ensemble
 
-   cor1=real(cor)
+   cor1=real(lcorr)
    cor1=cor1/sqrt(3.0)
-   xlength=real(len)
+   xlength=real(nwin)
    dx=xlength/real(parnrtime-1)
    n1=2*nint(real(parnrtime)*cor1/(2.0*dx))
    print '(2(a,i5),a,f10.3)','parnrtime=',parnrtime,', n1=',n1,', dt=',dx

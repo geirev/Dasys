@@ -2,7 +2,7 @@ module m_loaduvw
 contains
 subroutine loaduvw(u,v,w,nrens,it,istep)
    use mod_dimensions
-   use m_readinfile, only : experiment,itdirs
+   use m_readinfile, only : experiment
    use m_params
    use m_read_uvw
    implicit none
@@ -28,11 +28,7 @@ subroutine loaduvw(u,v,w,nrens,it,istep)
 ! load uvw from ensemble run
    do iens=1,nrens
       write(ciens,'(i4.4)')iens
-      if (itdirs) then
-         fname=trim(experiment)//'/mem'//ciens//'/it'//cit//'/uvw'//cistep//'.uf'
-      else
-         fname=trim(experiment)//'/mem'//ciens//'/uvw'//cistep//'.uf'
-      endif
+      fname=trim(experiment)//'/mem'//ciens//'/uvw'//cistep//'.uf'
       inquire(file=trim(fname),exist=ex)
       if (ex) then
           call read_uvw(trim(fname),u(:,:,:,iens),v(:,:,:,iens),w(:,:,:,iens))

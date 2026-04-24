@@ -1,13 +1,12 @@
 module m_runmodel
 contains
-subroutine runmodel(parnrtime)
+subroutine runmodel()
    use mod_dimensions
-   use m_readinfile, only : experiment,runcommand
-   use m_params
+   use m_readinfile, only : experiment,runcommand,iwin
+   !use m_parameters, only : parnrtime
    use m_read_uvw
    use m_input_files_def, only : measurment_locations_file
    implicit none
-   integer, intent(in) :: parnrtime
    integer :: iens=0
    character(len=4) ciens
    logical exd
@@ -28,18 +27,21 @@ subroutine runmodel(parnrtime)
 
    cmd = 'cp '//trim(measurment_locations_file)//' '//trim(directory)//'/measurement_loc.in'
    call system(trim(cmd))
-   call system('cp uvel_time.ref '//trim(directory)//'/uvel_time.dat')
+   call system('cp '//trim(experiment)//'/uvel_time.ref '//trim(directory)//'/uvel_time.dat')
    call system('cp infile.in '//trim(directory)//'/infile.in')
    call system('rm -f '//trim(directory)//'/uvw0?????.uf')
    call system('cd '//trim(directory)//'; '//trim(runcommand))
 
    fname=trim(experiment)//'/tecstate_0.dat'
-   open(10,file=trim(fname))
-      write(10,'(a)')'TITLE = "State variables"'
-      write(10,'(a)')'VARIABLES = "time", "vel", "dir"'
-      write(10,'(a,i0,a)')'ZONE T="Reference", I=',parnrtime,', DATAPACKING=POINT'
-   close(10)
-   write(cmd,'(a,a)')'cat uvel_time.ref >> ',trim(fname)
+   if (iwin == 1) then
+      open(10,file=trim(fname))
+         write(10,'(a)')'TITLE = "State variables"'
+         write(10,'(a)')'VARIABLES = "time", "vel", "dir"'
+         !write(10,'(a,i0,a)')'ZONE T="Reference", I=',parnrtime,', DATAPACKING=POINT'
+         write(10,'(a)')'ZONE T="Reference", I=XXX, DATAPACKING=POINT'
+      close(10)
+   endif
+   write(cmd,'(a,a)')'cat '//trim(experiment)//'/uvel_time.ref >> ',trim(fname)
    call system(trim(cmd))
 end subroutine
 end module

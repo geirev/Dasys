@@ -1,7 +1,5 @@
 module m_smooth_random_series
-   implicit none
 contains
-
    subroutine smooth_random_series(x, n, dt, lc, x0, v0, xend, vend)
       use m_normal
       implicit none

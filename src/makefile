@@ -131,9 +131,8 @@ depend:
 	sed -i '/ iso_c_binding/d'  depends.file
 	sed -i '/ iso_fortran_env/d'  depends.file
 
-tags: source.files
+.PHONY: tags
+tags:
 	tags.sh
-	#ctags *.F90
-	#f90tags.sh
 
 include depends.file
